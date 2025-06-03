@@ -1,47 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Network Dashboard</title>
+    <title>ICT Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>System Dashboard</h1>
-        <form method="post">
-            <label for="system">System:</label>
-            <select name="system" id="system">
-                <option value="Meraki" {% if selected_system == 'Meraki' %}selected{% endif %}>Meraki</option>
-                <option value="Lycia" {% if selected_system == 'Lycia' %}selected{% endif %}>Lycia</option>
-                <option value="CUCM" {% if selected_system == 'CUCM' %}selected{% endif %}>CUCM</option>
-            </select>
+    <h1>ICT System Dashboard</h1>
 
-            <label for="status">Status:</label>
-            <select name="status" id="status">
-                <option value="">All</option>
-                <option value="online" {% if filter_status == 'online' %}selected{% endif %}>Online</option>
-                <option value="offline" {% if filter_status == 'offline' %}selected{% endif %}>Offline</option>
-            </select>
+    <form method="post">
+        <label for="system">Choose a system:</label>
+        <select name="system" id="system">
+            <option value="">-- Select --</option>
+            <option value="Meraki" {% if selected_system == 'Meraki' %}selected{% endif %}>Meraki</option>
+            <option value="Lycia" {% if selected_system == 'Lycia' %}selected{% endif %}>Lycia</option>
+            <option value="CUCM" {% if selected_system == 'CUCM' %}selected{% endif %}>CUCM</option>
+        </select>
 
-            <button type="submit">Apply Filter</button>
-        </form>
+        <label for="status">Filter by status:</label>
+        <select name="status" id="status">
+            <option value="">-- All --</option>
+            <option value="online" {% if filter_status == 'online' %}selected{% endif %}>Online</option>
+            <option value="offline" {% if filter_status == 'offline' %}selected{% endif %}>Offline</option>
+        </select>
 
+        <button type="submit">Filter</button>
+    </form>
+
+    <hr>
+
+    {% if system_data %}
         <table>
-            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+            </tr>
+            {% for device in system_data %}
                 <tr>
-                    <th>Name</th>
-                    <th>Status</th>
+                    <td>{{ device.Name or device.name }}</td>
+                    <td>{{ device.Status or device.status }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for device in system_data %}
-                <tr>
-                    <td>{{ device.Name }}</td>
-                    <td>{{ device.Status }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+            {% endfor %}
         </table>
-    </div>
+    {% elif selected_system %}
+        <p>No data found for {{ selected_system }}.</p>
+    {% endif %}
 </body>
 </html>

@@ -39,8 +39,12 @@ def get_meraki_devices():
                     'Status': device.get('status', 'Unknown')
                 })
 
-        sorted_devices = sorted(all_devices, key=lambda x: (x['Name'], x['Status']))
+        sorted_devices = sorted(
+            all_devices,
+            key=lambda x: (x.get('Name') or '', x.get('Status') or '')
+        )
         return sorted_devices
+
     except Exception as e:
         return [{'Name': 'Error', 'Status': f'Meraki API error: {str(e)}'}]
 

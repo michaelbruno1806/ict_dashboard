@@ -1,14 +1,14 @@
-from flask import Flask, render_template_string, request, url_for
+from flask import Flask, render_template_string, request, jsonify
 import pandas as pd
 import os
 
 app = Flask(__name__)
 
-# --------- Helpers ---------
-def get_excel_data(file_name, filter_status=None):
+# Function to fetch and sort hotel data
+def get_hotel_data(hotel_name, filter_status=None):
+    file_name = f"{hotel_name.lower()}.xlsx"
     try:
         df = pd.read_excel(file_name)
-
         if 'Name' in df.columns and 'Status' in df.columns:
             if filter_status:
                 df = df[df['Status'].str.lower() == filter_status.lower()]
@@ -18,10 +18,20 @@ def get_excel_data(file_name, filter_status=None):
             return [{'error': 'Required columns (Name, Status) not found in file'}]
     except FileNotFoundError:
         return [{'error': f'File "{file_name}" not found.'}]
-    except Exception as e:
-        return [{'error': str(e)}]
 
-# --------- Routes ---------
+# Function to fetch system data
+def get_system_data(system_name):
+    file_name = f"{system_name.lower()}.xlsx"
+    try:
+        df = pd.read_excel(file_name)
+        if 'Name' in df.columns and 'Status' in df.columns:
+            sorted_df = df[['Name', 'Status']].sort_values(by=['Name', 'Status'])
+            return sorted_df.to_dict(orient='records')
+        else:
+            return [{'error': 'Required columns (Name, Status) not found in file'}]
+    except FileNotFoundError:
+        return [{'error': f'File "{file_name}" not found.'}]
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     selected_site = request.form.get('site')
@@ -31,16 +41,11 @@ def index():
     system_data = []
 
     if selected_site:
-        hotel_file = f"{selected_site.lower().replace(' ', '_')}.xlsx"
-        parsed_data = get_excel_data(hotel_file, filter_status)
-
+        parsed_data = get_hotel_data(selected_site, filter_status)
     if selected_system:
-        system_file = f"{selected_system.lower().replace(' ', '_')}.xlsx"
-        system_data = get_excel_data(system_file)
+        system_data = get_system_data(selected_system)
 
-    # --------- HTML Template ---------
-    html_template = '''
-    <!DOCTYPE html>
+    html_template = '''<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -49,90 +54,45 @@ def index():
         <style>
             body {
                 font-family: 'Century Gothic', sans-serif;
-                background: #fafafa url('{{ url_for('static', filename='logo.png') }}') no-repeat center center;
-                background-size: cover;
+                background: #fafafa;
                 color: #00263e;
                 padding: 20px;
                 margin: 0;
+                background-image: url('{{ url_for('static', filename='logo.png') }}');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
             }
-            h1 {
-                text-align: center;
-                font-size: 2.5em;
-                margin-bottom: 20px;
-            }
-            form {
-                display: flex;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 10px;
-                margin-bottom: 20px;
-            }
+            h1 { text-align: center; font-size: 2.5em; }
+            form { display: flex; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
             select, button {
-                padding: 10px;
-                font-size: 16px;
-                border-radius: 5px;
-                border: 1px solid #ccc;
+                padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc;
             }
             button {
-                background-color: #b4a064;
-                color: #fff;
-                cursor: pointer;
-            }
-            button:hover {
-                background-color: #a18a57;
+                background-color: #b4a064; color: white; cursor: pointer;
             }
             .container {
-                max-width: 900px;
-                margin: auto;
-                padding: 20px;
-                background-color: rgba(255,255,255,0.9);
-                border-radius: 12px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                max-width: 900px; margin: auto; background-color: rgba(255,255,255,0.9);
+                padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             }
             .data-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 15px;
-                padding: 20px 0;
+                display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px 0;
             }
-            .header {
-                font-weight: bold;
-                text-align: center;
-                border-bottom: 2px solid #FFC107;
-                padding-bottom: 8px;
-            }
+            .header { font-weight: bold; text-align: center; border-bottom: 2px solid #FFC107; }
             .grid-item {
-                padding: 10px;
-                font-size: 1.1em;
-                text-align: center;
-                border-radius: 8px;
+                padding: 10px; text-align: center; border-radius: 8px;
             }
             .status-online {
-                background-color: #e3f2e9;
-                color: #155724;
-                border: 1px solid #c3e6cb;
+                background-color: #e3f2e9; color: #155724; border: 1px solid #c3e6cb;
             }
             .status-dormant {
-                background-color: #ffeeba;
-                color: #856404;
-                border: 1px solid #ffeeba;
+                background-color: #ffeeba; color: #856404; border: 1px solid #ffeeba;
             }
             .status-offline {
-                background-color: #f8d7da;
-                color: #721c24;
-                border: 1px solid #f5c6cb;
+                background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
             }
-            .error {
-                color: red;
-                text-align: center;
-                font-weight: bold;
-            }
-            .footer {
-                text-align: center;
-                color: #666;
-                font-size: 0.9em;
-                margin-top: 20px;
-            }
+            .error { color: red; text-align: center; }
+            .footer { text-align: center; font-size: 0.9em; margin-top: 20px; color: #666; }
         </style>
     </head>
     <body>
@@ -164,30 +124,30 @@ def index():
                 <div class="data-grid">
                     <div class="header">Name</div>
                     <div class="header">Status</div>
-                    {% for row in parsed_data %}
-                        <div class="grid-item">{{ row['Name'] }}</div>
-                        <div class="grid-item status-{{ row['Status']|lower }}">
-                            {{ row['Status'] }}
+                    {% for device in parsed_data %}
+                        <div class="grid-item">{{ device['Name'] }}</div>
+                        <div class="grid-item 
+                            {% if device['Status'] == 'Online' %}status-online{% elif device['Status'] == 'Dormant' %}status-dormant{% elif device['Status'] == 'Offline' %}status-offline{% endif %}">
+                            {{ device['Status'] }}
                         </div>
                     {% endfor %}
                 </div>
-            {% elif system_data %}
+            {% elif parsed_data and parsed_data[0].get('error') %}
+                <p class="error">{{ parsed_data[0]['error'] }}</p>
+            {% endif %}
+
+            {% if selected_system and selected_system == 'Meraki' %}
                 <div class="data-grid">
                     <div class="header">Name</div>
                     <div class="header">Status</div>
-                    {% for row in system_data %}
-                        <div class="grid-item">{{ row['Name'] }}</div>
-                        <div class="grid-item status-{{ row['Status']|lower }}">
-                            {{ row['Status'] }}
+                    {% for device in system_data %}
+                        <div class="grid-item">{{ device['Name'] }}</div>
+                        <div class="grid-item 
+                            {% if device['Status'] == 'Online' %}status-online{% elif device['Status'] == 'Dormant' %}status-dormant{% elif device['Status'] == 'Offline' %}status-offline{% endif %}">
+                            {{ device['Status'] }}
                         </div>
                     {% endfor %}
                 </div>
-            {% endif %}
-
-            {% if parsed_data and parsed_data[0].get('error') %}
-                <p class="error">{{ parsed_data[0]['error'] }}</p>
-            {% elif system_data and system_data[0].get('error') %}
-                <p class="error">{{ system_data[0]['error'] }}</p>
             {% endif %}
         </div>
 
@@ -195,18 +155,19 @@ def index():
             &copy; ICT OPS Proactive Dashboard by Mika
         </div>
     </body>
-    </html>
-    '''
+    </html>'''
 
-    return render_template_string(
-        html_template,
-        parsed_data=parsed_data,
-        selected_site=selected_site,
-        filter_status=filter_status,
-        system_data=system_data,
-        selected_system=selected_system
-    )
+    return render_template_string(html_template, parsed_data=parsed_data, selected_site=selected_site,
+                                  filter_status=filter_status, system_data=system_data, selected_system=selected_system)
 
-# --------- Run App ---------
+# Optional route to receive Meraki alert webhook (JSON payload)
+@app.route('/meraki/webhook', methods=['POST'])
+def meraki_webhook():
+    data = request.get_json()
+    print("Meraki Alert Received:", data)  # Log to terminal or Render logs
+    return jsonify({"status": "received"}), 200
+
+# Run app (Render uses the PORT env variable)
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

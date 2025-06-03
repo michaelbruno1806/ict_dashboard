@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ICT OPS Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb);
+            padding: 2rem;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.25rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        select, button {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .cell {
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .header {
+            font-weight: 600;
+            background-color: #f9fafb;
+        }
+
+        .status-online {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-offline {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-dormant {
+            background-color: #fef9c3;
+            color: #92400e;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ICT OPS Proactive Dashboard</h1>
+        <form>
+            <select>
+                <option>Hotel</option>
+            </select>
+            <select>
+                <option>System</option>
+            </select>
+            <select>
+                <option>Status</option>
+            </select>
+            <button>Load Data</button>
+        </form>
+        <div class="grid">
+            <div class="cell header">Name</div>
+            <div class="cell header">Status</div>
+            <div class="cell">Switch01</div>
+            <div class="cell status-online">Online</div>
+            <div class="cell">AP02</div>
+            <div class="cell status-offline">Offline</div>
+            <div class="cell">Server01</div>
+            <div class="cell status-dormant">Dormant</div>
+        </div>
+        <div class="footer">&copy; 2025 ICT OPS Dashboard</div>
+    </div>
+</body>
+</html>

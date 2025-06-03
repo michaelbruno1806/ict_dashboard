@@ -3,13 +3,11 @@ import meraki
 
 app = Flask(__name__)
 
-# Replace with your actual Meraki API key
 MERAKI_API_KEY = 'YOUR_MERAKI_API_KEY'
 DASHBOARD = meraki.DashboardAPI(MERAKI_API_KEY, suppress_logging=True)
 
-ORG_ID = None  # optional: hardcode if known for speed
+ORG_ID = None 
 
-# Get Meraki Devices
 def get_meraki_devices():
     try:
         global ORG_ID

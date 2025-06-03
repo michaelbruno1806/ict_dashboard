@@ -3,7 +3,7 @@ import meraki
 
 app = Flask(__name__)
 
-MERAKI_API_KEY = 'YOUR_MERAKI_API_KEY'
+MERAKI_API_KEY = 'a64475ed0b2786f739ae12d4ee2dbb6247b59cb5'
 DASHBOARD = meraki.DashboardAPI(MERAKI_API_KEY, suppress_logging=True)
 ORG_ID = None
 

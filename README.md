@@ -1,4 +1,4 @@
-#Flask Network Dashboard
+#Flask Dashboard
 
 A web-based dashboard built with Flask to display system/device statuses from:
 - Cisco Meraki

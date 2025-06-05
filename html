@@ -1,48 +1,182 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <title>ICT Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Meraki Devices by Hotel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40;
+        }
+
+        form {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select, button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #dee2e6;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #e9ecef;
+        }
+
+        canvas {
+            margin-top: 40px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>ICT System Dashboard</h1>
+<div class="container">
+    <h1>Meraki Devices</h1>
 
     <form method="post">
-        <label for="system">Choose a system:</label>
-        <select name="system" id="system">
-            <option value="">-- Select --</option>
-            <option value="Meraki" {% if selected_system == 'Meraki' %}selected{% endif %}>Meraki</option>
-            <option value="Lycia" {% if selected_system == 'Lycia' %}selected{% endif %}>Lycia</option>
-            <option value="CUCM" {% if selected_system == 'CUCM' %}selected{% endif %}>CUCM</option>
-        </select>
-
-        <label for="status">Filter by status:</label>
-        <select name="status" id="status">
-            <option value="">-- All --</option>
+        <label>Filter by status:</label>
+        <select name="status">
+            <option value="">All</option>
             <option value="online" {% if filter_status == 'online' %}selected{% endif %}>Online</option>
             <option value="offline" {% if filter_status == 'offline' %}selected{% endif %}>Offline</option>
+            <option value="alerting" {% if filter_status == 'alerting' %}selected{% endif %}>Alerting</option>
         </select>
 
-        <button type="submit">Filter</button>
+        <label>Filter by hotel:</label>
+        <select name="hotel">
+            <option value="">All</option>
+            {% for hotel in hotel_list %}
+            <option value="{{ hotel }}" {% if filter_hotel == hotel %}selected{% endif %}>{{ hotel }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Apply</button>
     </form>
 
-    <hr>
+    <table>
+        <thead>
+        <tr>
+            <th>Hotel</th>
+            <th>Device Name</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for device in system_data %}
+        <tr>
+            <td>{{ device.Hotel }}</td>
+            <td>{{ device.Name }}</td>
+            <td>{{ device.Status }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
-    {% if system_data %}
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Status</th>
-            </tr>
-            {% for device in system_data %}
-                <tr>
-                    <td>{{ device.Name or device.name }}</td>
-                    <td>{{ device.Status or device.status }}</td>
-                </tr>
-            {% endfor %}
-        </table>
-    {% elif selected_system %}
-        <p>No data found for {{ selected_system }}.</p>
-    {% endif %}
+    <!-- Graphique Chart.js -->
+    <canvas id="statusChart" height="100"></canvas>
+</div>
+
+<script>
+    const deviceData = {{ system_data|tojson }};
+    const statusCountPerHotel = {};
+
+    deviceData.forEach(device => {
+        const hotel = device.Hotel || 'Unknown';
+        const status = device.Status || 'Unknown';
+
+        if (!statusCountPerHotel[hotel]) {
+            statusCountPerHotel[hotel] = {online: 0, offline: 0, alerting: 0, unknown: 0};
+        }
+
+        if (['online', 'offline', 'alerting'].includes(status)) {
+            statusCountPerHotel[hotel][status]++;
+        } else {
+            statusCountPerHotel[hotel]['unknown']++;
+        }
+    });
+
+    const hotels = Object.keys(statusCountPerHotel);
+    const onlineCounts = hotels.map(h => statusCountPerHotel[h].online);
+    const offlineCounts = hotels.map(h => statusCountPerHotel[h].offline);
+    const alertingCounts = hotels.map(h => statusCountPerHotel[h].alerting);
+    const unknownCounts = hotels.map(h => statusCountPerHotel[h].unknown);
+
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: hotels,
+            datasets: [
+                {
+                    label: 'Online',
+                    data: onlineCounts,
+                    backgroundColor: '#28a745'
+                },
+                {
+                    label: 'Offline',
+                    data: offlineCounts,
+                    backgroundColor: '#dc3545'
+                },
+                {
+                    label: 'Alerting',
+                    data: alertingCounts,
+                    backgroundColor: '#ffc107'
+                },
+                {
+                    label: 'Unknown',
+                    data: unknownCounts,
+                    backgroundColor: '#6c757d'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, beginAtZero: true }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Status Breakdown by Hotel'
+                }
+            }
+        }
+    });
+</script>
 </body>
 </html>
